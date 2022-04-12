@@ -2,7 +2,7 @@
 
 import re
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 # Yahoo!Japan G-GuideのリストをXMLTV形式にダンプするためのツール。
@@ -11,7 +11,7 @@ from urllib.parse import quote
 # https://samicrusader.me (私自身は日本語を理解できませんので、連絡は英語でお願いします。)
 
 # 日本語での情報提供を希望される場合は、「False」に設定してください。(not currently configured)
-useEnglish = True
+#useEnglish = True
 
 # Notes:
 genreMappingsEN = {
@@ -26,7 +26,7 @@ genreMappingsEN = {
     '0x8': "Documentary",
     '0x9': "Theater",
     '0xA': "Educational", # Hobby/Educational
-    #'0xB': "Welfare", # DeepL recommended "social welfare". Most shows in this category are dramas. 
+    '0xB': "Welfare", # DeepL recommended "social welfare". Most shows in this category are dramas. 
     '0xB': "Other",
     # Where is 0xC-0xE?
     '0xF': "Other"
@@ -100,62 +100,36 @@ baseURL = 'https://tv.yahoo.co.jp/api/adapter'
 
 listings = dict()
 
-for servicemapping in serviceMappingsEN.keys():
-    for areaid in areaMappingsEN.keys():
-        x = requests.get(baseURL, params={'siTypeId': servicemapping, 'areaId': areaid, 'hours': 24, 'broadCastStartDate': 1649793300, '_api': 'programListingQuery'})
-        try:
-            #print(areaMappingsEN[areaid]+':', 'got', len(x.json()['ResultSet']['Result']), 'listings')
-            for item in x.json()['ResultSet']['Result']:
-                sn = item['networkId']+'.'+item['serviceId']+'.tv.yahoo.co.jp'
-                if sn not in listings.keys():
-                    print(f'Added from {areaMappingsEN[areaid]}: {item["serviceName"]}')
-                    listings.update({
-                        sn: {
-                            'serviceName': item['serviceName'],
-                            'channelName': item['channelName'],
-                            'listings': list()
-                        }
-                    })
-                if item not in listings[sn]['listings']:
-                    listings[sn]['listings'].append(item)
-            if servicemapping == 1 and not areaid == 23:
-                break
-        except:
-            print(x.json())
-            exit(1)
-#print(listings[list(listings.keys())[1]]['listings'][3])
+xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+xml += '<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd">\n'
+xml += '<tv source-info-url="https://tv.yahoo.co.jp" source-info-name="Yahoo!テレビ - Gガイド" source-data-url="https://tv.yahoo.co.jp/listings" generator-info-name="samicrusader\'s EPG Parsers" generator-info-url="https://github.com/samicrusader/epg">\n'
 
-{
-    'contentsId': '97949088',
-    'programId': 39650,
-    'siTypeId': 1,
-    'siTypeName': 'BS(2K)',
-    'networkId': '0x0004',
-    'serviceId': '0x0067',
-    'serviceName': 'NHKBSプレミアム',
-    'channelNumber': 103,
-    'channelSortOrder': 103,
-    'broadCastStartDate': 1649796900,
-    'broadCastEndDate': 1649797200,
-    'duration': 300,
-    'majorGenreId': ['0x4', '0xA', '0x8'],
-    'programTitle': '名曲アルバム',
-    'title': '名曲アルバム「水の変態」宮城道雄・作曲',
-    'summary': '「春の海」で知られる箏曲家・宮城道雄が１４歳で挑んだ第一作。生涯をかけて箏曲の革新に挑み続けた道雄の原点というべき一曲を清らかな水の情景とともにお届けする。',
-    'mitaiCount': 137,
-    'reviewCount': 0,
-    'ratingCount': 1,
-    'ratingAverage': 5,
-    'listingsFlg': True,
-    'featureImage': '',
-    'updateTime': '2022-04-08T03:00:15Z',
-    'broadCastStartDateMinute': 1649796900,
-    'broadCastEndDateMinute': 1649797200,
-    'durationMinute': 5,
-    'channelName': 'NHKBSプレミアム'
-}
-
-xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd">\n<tv source-info-url="https://tv.yahoo.co.jp" source-info-name="Yahoo!テレビ - Gガイド" source-data-url="https://tv.yahoo.co.jp/listings" generator-info-name="YahooEPG.py" generator-info-url="https://www.youtube.com/watch?v=wg7tMJLSfwI">\n'
+for i in range(7):
+    for servicemapping in serviceMappingsEN.keys():
+        for areaid in areaMappingsEN.keys():
+            dt = datetime.now()
+            dt = int(datetime(dt.year, dt.month, dt.day+i, 15, 0, 0, tzinfo=timezone.utc).timestamp())
+            x = requests.get(baseURL, params={'siTypeId': servicemapping, 'areaId': areaid, 'hours': 24, 'broadCastStartDate': dt, '_api': 'programListingQuery'})
+            try:
+                #print(areaMappingsEN[areaid]+':', 'got', len(x.json()['ResultSet']['Result']), 'listings')
+                for item in x.json()['ResultSet']['Result']:
+                    sn = item['networkId']+'.'+item['serviceId']+'.tv.yahoo.co.jp'
+                    if sn not in listings.keys():
+                        print(f'Added from {areaMappingsEN[areaid]}: {item["serviceName"]}')
+                        listings.update({
+                            sn: {
+                                'serviceName': item['serviceName'],
+                                'channelName': item['channelName'],
+                                'listings': list()
+                            }
+                        })
+                    if item not in listings[sn]['listings']:
+                        listings[sn]['listings'].append(item)
+                if servicemapping == 1 and not areaid == 23:
+                    break
+            except:
+                print(x.json())
+                exit(1)
 
 for item in listings.keys():
     xml += f'    <channel id="{item}">\n'
@@ -167,7 +141,7 @@ xml += '\n'
 
 for item in listings.keys():
     for listing in listings[item]['listings']:
-        xml += f'    <programme start="" channel="{item}>\n'
+        xml += f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
         xml += f'        <title lang="ja">{quote(listing["programTitle"])}</title>\n'
         xml += f'        <sub-title lang="ja">{quote(listing["title"])}</sub-title>\n'
         xml += f'        <desc lang="ja">{quote(listing["summary"])}</desc>\n'
@@ -176,7 +150,7 @@ for item in listings.keys():
             listing.update({'updateTime': datetime.fromtimestamp(listing['broadCastStartDate']).strftime('%Y-%m-%dT%H:%M:%SZ')})
         xml += f'        <date>{listing["updateTime"].split("T")[0].replace("-", "")}</date>\n' # TODO: dt object
         # TODO: category, keyword
-        xml += f'        <language>ja</language>'
+        xml += f'        <language>ja</language>\n'
         xml += f'        <length units="minutes">{listing["durationMinute"]}</length>\n'
         # TODO: icon, url
         xml += f'        <country>JP</country>\n'
