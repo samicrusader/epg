@@ -139,21 +139,23 @@ for item in listings.keys():
 
 xml += '\n'
 
+programs = list()
+
 for item in listings.keys():
     for listing in listings[item]['listings']:
-        xml += f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
-        xml += f'        <title lang="ja">{quote(listing["programTitle"])}</title>\n'
-        xml += f'        <sub-title lang="ja">{quote(listing["title"])}</sub-title>\n'
-        xml += f'        <desc lang="ja">{quote(listing["summary"])}</desc>\n'
+        programme = f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
+        programme += f'        <title lang="ja">{quote(listing["programTitle"])}</title>\n'
+        programme += f'        <sub-title lang="ja">{quote(listing["title"])}</sub-title>\n'
+        programme += f'        <desc lang="ja">{quote(listing["summary"])}</desc>\n'
         # TODO: credits
         if not 'updateTime' in listing.keys():
             listing.update({'updateTime': datetime.fromtimestamp(listing['broadCastStartDate']).strftime('%Y-%m-%dT%H:%M:%SZ')})
-        xml += f'        <date>{listing["updateTime"].split("T")[0].replace("-", "")}</date>\n' # TODO: dt object
+        programme += f'        <date>{listing["updateTime"].split("T")[0].replace("-", "")}</date>\n' # TODO: dt object
         # TODO: category, keyword
-        xml += f'        <language>ja</language>\n'
-        xml += f'        <length units="minutes">{listing["durationMinute"]}</length>\n'
+        programme += f'        <language>ja</language>\n'
+        programme += f'        <length units="minutes">{listing["durationMinute"]}</length>\n'
         # TODO: icon, url
-        xml += f'        <country>JP</country>\n'
+        programme += f'        <country>JP</country>\n'
         epnum = re.findall(r'#\d+', listing['title'])
         skipepnum = False
         if 'majorGenreId' in listing.keys():
@@ -161,11 +163,13 @@ for item in listings.keys():
                 skipepnum = True
         if not skipepnum:
             if epnum:
-                xml += f'        <episode-num system="onscreen">{epnum[0]}</episode-num>\n'
+                programme += f'        <episode-num system="onscreen">{epnum[0]}</episode-num>\n'
             else:
-                xml += f'        <episode-num system="onscreen">{listing["updateTime"].split("T")[0]}</episode-num>\n'
-        xml += '    </programme>\n'
-        
+                programme += f'        <episode-num system="onscreen">{listing["updateTime"].split("T")[0]}</episode-num>\n'
+        programme += '    </programme>\n'
+        if not programme in programs:
+            programs.append(programme)
+xml += ''.join(programs)
 xml += '</tv>'
 
 fh = open('YahooEPG.xml', 'w')

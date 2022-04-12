@@ -46,6 +46,7 @@ for channel in req.json()['header']:
 
 xml += '\n'
 
+programs = list()
 epg = dict()
 for i in range(7):
     date = (datetime.now() + timedelta(days=i)).strftime('%Y%m%d')
@@ -57,29 +58,32 @@ for i in range(7):
     req = requests.get(f'https://tvguide.myjcom.jp/api/getEpgInfo/?channels={"%2C".join(epgchannels)}&rectime=&rec4k=').json()
     for c, epgitems in req.items():
         for epgitem in epgitems:
-            xml += f'    <programme start="{epgitem["programStart"]}" end="{epgitem["programEnd"]}" channel="120_{epgitem["serviceCode"]}.myjcom.jp">\n'
-            xml += f'        <title lang="ja">{quote(epgitem["title"])}</title>\n'
-            #xml += f'        <sub-title lang="ja">{}</sub-title>\n'
-            xml += f'        <desc lang="ja">{quote(epgitem["commentary"])}</desc>\n'
+            programme = f'    <programme start="{epgitem["programStart"]}" end="{epgitem["programEnd"]}" channel="120_{epgitem["serviceCode"]}.myjcom.jp">\n'
+            programme += f'        <title lang="ja">{quote(epgitem["title"])}</title>\n'
+            #programme += f'        <sub-title lang="ja">{}</sub-title>\n'
+            programme += f'        <desc lang="ja">{quote(epgitem["commentary"])}</desc>\n'
             # TODO: credits
-            xml += f'        <date>{epgitem["programDate"]}</date>\n'
+            programme += f'        <date>{epgitem["programDate"]}</date>\n'
             # TODO: dt object
             # TODO: category, keyword
-            xml += f'        <language>ja</language>\n'
-            xml += f'        <length units="minutes">{epgitem["duration"]}</length>\n'
+            programme += f'        <language>ja</language>\n'
+            programme += f'        <length units="minutes">{epgitem["duration"]}</length>\n'
             # TODO: icon, url, mediainfo
-            xml += f'        <country>jp</country>\n'
+            programme += f'        <country>jp</country>\n'
             epnum = re.findall(r'#\d+', epgitem['title'])
             skipepnum = False
             if list(epgitem['sortGenre'])[0] == '6':
                 skipepnum = True
             if not skipepnum:
                 if epnum:
-                    xml += f'        <episode-num system="onscreen">{epnum[0].replace("#", "")}</episode-num>\n'
+                    programme += f'        <episode-num system="onscreen">{epnum[0].replace("#", "")}</episode-num>\n'
                 else:
-                    xml += f'        <episode-num system="onscreen">{epgitem["programDate"]}</episode-num>\n'
-            xml += '    </programme>\n'
+                    programme += f'        <episode-num system="onscreen">{epgitem["programDate"]}</episode-num>\n'
+            programme += '    </programme>\n'
+            if not programme in programs:
+                programs.append(programme)
 
+xml += ''.join(programs)
 xml += '</tv>'
 
 fh = open('JCOM.xml', 'w')
