@@ -155,7 +155,7 @@ for servicemapping in serviceMappingsEN.keys():
     'channelName': 'NHKBSプレミアム'
 }
 
-xml = '<tv source-info-url="https://tv.yahoo.co.jp" source-info-name="Yahoo!テレビ - Gガイド" source-data-url="https://tv.yahoo.co.jp/listings" generator-info-name="YahooEPG.py" generator-info-url="https://www.youtube.com/watch?v=wg7tMJLSfwI">\n'
+xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd">\n<tv source-info-url="https://tv.yahoo.co.jp" source-info-name="Yahoo!テレビ - Gガイド" source-data-url="https://tv.yahoo.co.jp/listings" generator-info-name="YahooEPG.py" generator-info-url="https://www.youtube.com/watch?v=wg7tMJLSfwI">\n'
 
 for item in listings.keys():
     xml += f'    <channel id="{item}">\n'
