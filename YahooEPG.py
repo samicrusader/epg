@@ -3,6 +3,7 @@
 import re
 import requests
 from datetime import datetime
+from urllib.parse import quote
 
 # Yahoo!Japan G-GuideのリストをXMLTV形式にダンプするためのツール。
 # Tool for dumping Yahoo!Japan G-Guide listings to XMLTV format.
@@ -166,10 +167,10 @@ xml += '\n'
 
 for item in listings.keys():
     for listing in listings[item]['listings']:
-        xml += f'    <programme start="" channel="{listings[item]["channelName"]}>\n'
-        xml += f'        <title lang="ja">{listing["programTitle"]}</title>\n'
-        xml += f'        <sub-title lang="ja">{listing["title"]}</sub-title>\n'
-        xml += f'        <desc lang="ja">{listing["summary"]}</desc>\n'
+        xml += f'    <programme start="" channel="{item}>\n'
+        xml += f'        <title lang="ja">{quote(listing["programTitle"])}</title>\n'
+        xml += f'        <sub-title lang="ja">{quote(listing["title"])}</sub-title>\n'
+        xml += f'        <desc lang="ja">{quote(listing["summary"])}</desc>\n'
         # TODO: credits
         if not 'updateTime' in listing.keys():
             listing.update({'updateTime': datetime.fromtimestamp(listing['broadCastStartDate']).strftime('%Y-%m-%dT%H:%M:%SZ')})
