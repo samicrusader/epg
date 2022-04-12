@@ -1,112 +1,87 @@
 #!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 
-import json
+import re
 import requests
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+from urllib.parse import quote
 
-list_url = 'https://tvguide.myjcom.jp/api/mypage/getEpgChannelList/?channelType={channelType}&area={area}&channelGenre=&course=&chart=&is_adult=true'
-epg_url = 'https://tvguide.myjcom.jp/api/getEpgInfo/?channels={channels}&rectime=&rec4k='
-channel = '{channelType}_{service_code}_{date}'
-datefmt = '%Y%m%d'
-programdatefmt = '%Y%m%d%H%M%S'
-currentdate = datetime.now()
+# https://tvguide.myjcom.jp/detail/?channelType=2&serviceCode=24632_32375&eventId=604&programDate=20220413 # may be needed later
+
+# Notes:
+genres = {
+    6: 'movie', 
+    3: 'drama', 
+    1: 'sports', 
+    7: 'Anime/SFX', 
+    4: 'music', 
+    5: 'variety', 
+    10: 'hobbies/education', 
+    8: 'Documentary / Culture', 
+    0: 'News', 
+    9: 'Information / wide show', 
+    11: 'Theater/Performance', 
+    13: 'Others', 
+    12: 'Welfare'
+}
+
+channelTypes = {
+    2: 'Terrestial',
+    3: 'BS',
+    120: 'CS'
+}
+
+xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+xml += '<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd">\n'
+xml += '<tv source-info-url="https://tvguide.myjcom.jp/" source-info-name="J-COM Program Guide" generator-info-name="samicrusader\'s EPG Parsers" generator-info-url="https://github.com/samicrusader/epg">\n'
+
+channels = dict()
+req = requests.get(f'https://tvguide.myjcom.jp/api/mypage/getEpgChannelList/?channelType=120&area=108&channelGenre=&course=&chart=&is_adult=true')
+for channel in req.json()['header']:
+    code = '120_'+channel['service_code']
+    xml += f'    <channel id="{code}.myjcom.jp">\n'
+    xml += f'        <display-name lang="jp">{channel["channel_name"]}</display-name>\n'
+    xml += '    </channel>\n'
+    channels.update({code: channel['channel_name']})
+
+xml += '\n'
+
 epg = dict()
+for i in range(7):
+    date = (datetime.now() + timedelta(days=i)).strftime('%Y%m%d')
+    if not date in epg.keys():
+        epg[date] = dict()
+    epgchannels = list()
+    for channel in channels:
+        epgchannels.append(channel+'_'+date)
+    req = requests.get(f'https://tvguide.myjcom.jp/api/getEpgInfo/?channels={"%2C".join(epgchannels)}&rectime=&rec4k=').json()
+    for c, epgitems in req.items():
+        for epgitem in epgitems:
+            xml += f'    <programme start="{epgitem["programStart"]}" end="{epgitem["programEnd"]}" channel="120_{epgitem["serviceCode"]}.myjcom.jp">\n'
+            xml += f'        <title lang="ja">{quote(epgitem["title"])}</title>\n'
+            #xml += f'        <sub-title lang="ja">{}</sub-title>\n'
+            xml += f'        <desc lang="ja">{quote(epgitem["commentary"])}</desc>\n'
+            # TODO: credits
+            xml += f'        <date>{epgitem["programDate"]}</date>\n'
+            # TODO: dt object
+            # TODO: category, keyword
+            xml += f'        <language>ja</language>\n'
+            xml += f'        <length units="minutes">{epgitem["duration"]}</length>\n'
+            # TODO: icon, url, mediainfo
+            xml += f'        <country>jp</country>\n'
+            epnum = re.findall(r'#\d+', epgitem['title'])
+            skipepnum = False
+            if list(epgitem['sortGenre'])[0] == '6':
+                skipepnum = True
+            if not skipepnum:
+                if epnum:
+                    xml += f'        <episode-num system="onscreen">{epnum[0].replace("#", "")}</episode-num>\n'
+                else:
+                    xml += f'        <episode-num system="onscreen">{epgitem["programDate"]}</episode-num>\n'
+            xml += '    </programme>\n'
 
-# channelType:
-## 2 = Terrestial
-## 3 = BS Digital
-## 120 = Cable
-channelTypes = [2, 3, 120]
+xml += '</tv>'
 
-def grabChannels(area:int, channelTypes:list):
-    channels = dict()
-    for t in channelTypes:
-        req = requests.get(list_url.format(channelType=t, area=area))
-        for channel in req.json()['header']:
-            channels.update({str(t)+'_'+channel['service_code']: channel['channel_name']})
-    return channels
-
-def addEPG(channels:list, days:int):
-    for i in range(days+1):
-        date = currentdate + timedelta(days=i)
-        strdate = date.strftime(datefmt)
-        if not strdate in epg.keys():
-            epg[strdate] = dict() # 
-        epgchannels = list()
-        for channel in channels:
-            epgchannels.append(channel+'_'+strdate)
-        urlchannels = '%2C'.join(epgchannels)
-        req = requests.get(epg_url.format(channels=urlchannels)).json() # epg parse
-        print(req)
-        input('')
-        for c, epgitems in req.items():
-            for epgitem in epgitems:
-                channel = epgitem['channel_type']+'_'+str(epgitem['serviceCode'])
-                channelname = epgitem['channelName']
-                dateStart = datetime.strptime(str(epgitem['programStart']), programdatefmt)
-                dateEnd = datetime.strptime(str(epgitem['programEnd']), programdatefmt)
-                title = epgitem['title']
-                title = title.replace('&', '%26')
-                title = title.replace('<', '%3C')
-                title = title.replace('>', '%3E')
-                description = epgitem['commentary']
-                description = description.replace('&', '%26')
-                description = description.replace('<', '%3C')
-                description = description.replace('>', '%3E')
-                stereo = False
-                if 'stereo' in epgitem['attr']:
-                    stereo = True
-                if not channel in epg[strdate].keys(): ##
-                    epg[strdate][channel] = {
-                        'name': channelname,
-                        'programs': list()
-                    }
-                epg[strdate][channel]['programs'].append({ ##
-                    'start': dateStart,
-                    'end': dateEnd,
-                    'title': title,
-                    'description': description,
-                    'stereo': stereo
-                })
-            #print(epg[strdate].keys())
-        #print(epg[strdate].keys())
-        #input()
-
-channelslol = dict()
-
-channelslol.update(grabChannels(108, [2]))
-channelslol.update(grabChannels(28, [2]))
-channelslol.update(grabChannels(32, [2]))
-channelslol.update(grabChannels(108, [3, 120]))
-
-addEPG(channelslol.keys(), 14)
-
-xml = '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd">\n<tv source-info-url="https://tvguide.myjcom.jp/" source-info-name="J-COM Program Guide" generator-info-name="samicrusader\'s EPG Parsers" generator-info-url="https://github.com/samicrusader/epg">\n'
-xmlfoot = '</tv>'
-xmlchannels = list()
-xmllistings = list()
-
-# process channels
-for i, channel in epg[list(epg.keys())[0]].items():
-    xc = f'  <channel id="{i}.myjcom.jp">\n    <display-name>{channel["name"]}</display-name>\n    <icon src="" />\n  </channel>\n'
-    xmlchannels.append(xc)
-
-# process listings
-for date, channels in epg.items():
-    for i, channel in channels.items():
-        for listing in channel['programs']:
-            start = listing['start'].strftime('%Y%m%d%H%M%S')+' +0900'
-            stop = listing['end'].strftime('%Y%m%d%H%M%S')+' +0900'
-            xl = f'  <programme start="{start}" stop="{stop}" channel="{i}.myjcom.jp">\n    <title lang="jp">{listing["title"]}</title>\n    <desc lang="jp">{listing["description"]}</desc>\n    <date>{date}</date>'
-            if listing['stereo']:
-                xl += '\n    <audio>\n      <stereo>stereo</stereo>\n    </audio>'
-            xl += '\n  </programme>\n'
-            xmllistings.append(xl)
-
-xml += ''.join(xmlchannels)
-xml += ''.join(xmllistings)
-xml += xmlfoot
-fh = open('jcom.xml', 'w', encoding='utf8')
+fh = open('JCOM.xml', 'w')
 fh.write(xml)
 fh.close()
