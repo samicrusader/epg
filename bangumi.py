@@ -32,4 +32,11 @@ for channel in channelslist:
 
 programarea = soup.find('div', {'id': 'program_area'})
 for listing in programarea.findall('li', {'class': 'sc-future'})+programarea.findall('li', {'class': 'sc-current'})+programarea.findall('li', {'class': 'sc-past'}):
+    channel = listing['se-id'].split('-')[0]
+    id = listing['se-id'].split('-')[1]
+    date = listing['s']
+    title = listing.find('p', {'class': 'program_title'})
+    desc = listing.find('p', {'class': 'program_title'})
+    inforeq = requests.get(f'https://bangumi.org{listing.find("a")["href"]}')
+    infosoup = BeautifulSoup(inforeq.text, 'html.parser')
     pass
