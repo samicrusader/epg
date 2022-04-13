@@ -9,11 +9,8 @@ from datetime import datetime, timezone
 # This should match up to the channels provided by MujiTV last time I checked.
 # https://samicrusader.me (私自身は日本語を理解できませんので、連絡は英語でお願いします。)
 
-# 日本語での情報提供を希望される場合は、「False」に設定してください。(not currently configured)
-#useEnglish = True
-
 # Notes:
-genreMappingsEN = {
+genreMappings = {
     '0x0': "News",
     '0x1': "Sports",
     '0x2': "Informational", # Other translations put this as "Informational/Variety", while there still being a category for variety shows.
@@ -31,13 +28,13 @@ genreMappingsEN = {
     '0xF': "Other"
 }
 
-serviceMappingsEN = {
+serviceMappings = {
     1: "BS",
     # 2 is broken
     3: "Terrestial"
 }
 
-areaMappingsEN = {
+areaMappings = {
     #10: 'Hokkaido (Sapporo)',
     #11: 'Hokkaido (Hakodate)',
     #12: 'Hokkaido (Asahikawa)',
