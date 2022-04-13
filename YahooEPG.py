@@ -151,9 +151,13 @@ programs = list()
 for item in listings.keys():
     for listing in listings[item]['listings']:
         programme = f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
-        programme += f'        <title lang="ja">{XMLQuote(listing["programTitle"])}</title>\n'
-        programme += f'        <sub-title lang="ja">{XMLQuote(listing["title"])}</sub-title>\n'
-        programme += f'        <desc lang="ja">{XMLQuote(listing["summary"])}</desc>\n'
+        if not listing["programTitle"]:
+            programme += f'        <title lang="ja">{XMLQuote(listing["title"])}</title>\n'    
+        else:
+            programme += f'        <title lang="ja">{XMLQuote(listing["programTitle"])}</title>\n'
+            programme += f'        <sub-title lang="ja">{XMLQuote(listing["title"])}</sub-title>\n'
+        if listing["summary"]:
+            programme += f'        <desc lang="ja">{XMLQuote(listing["summary"])}</desc>\n'
         # TODO: credits
         if not 'updateTime' in listing.keys():
             listing.update({'updateTime': datetime.fromtimestamp(listing['broadCastStartDate']).strftime('%Y-%m-%dT%H:%M:%SZ')})
