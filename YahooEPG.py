@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 
 # Yahoo!Japan G-GuideのリストをXMLTV形式にダンプするためのツール。
 # Tool for dumping Yahoo!Japan G-Guide listings to XMLTV format.
-# This should match up to the channels provided by MujiTV last time I checked.
 # https://samicrusader.me (私自身は日本語を理解できませんので、連絡は英語でお願いします。)
 
 # Notes:
