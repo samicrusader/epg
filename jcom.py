@@ -6,6 +6,10 @@ import requests
 from datetime import datetime, timedelta
 from urllib.parse import quote
 
+# J-COM G-GuideのリストをXMLTV形式でダンプするツールです。
+# Tool for dumping J-COM G-Guide listings to XMLTV format.
+# https://samicrusader.me (私自身は日本語を理解できませんので、連絡は英語でお願いします。)
+
 # https://tvguide.myjcom.jp/detail/?channelType=2&serviceCode=24632_32375&eventId=604&programDate=20220413 # may be needed later
 
 # Notes:
