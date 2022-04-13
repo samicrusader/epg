@@ -147,7 +147,7 @@ programs = list()
 
 for item in listings.keys():
     for listing in listings[item]['listings']:
-        programme = f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
+        programme = f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" stop="{datetime.fromtimestamp(listing["broadCastEndDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
         if not listing["programTitle"]:
             programme += f'        <title lang="ja">{XMLQuote(listing["title"])}</title>\n'    
         else:
