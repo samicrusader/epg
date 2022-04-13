@@ -3,7 +3,6 @@
 import re
 import requests
 from datetime import datetime, timezone
-from urllib.parse import quote
 
 # Yahoo!Japan G-GuideのリストをXMLTV形式にダンプするためのツール。
 # Tool for dumping Yahoo!Japan G-Guide listings to XMLTV format.
@@ -96,6 +95,14 @@ areaMappingsEN = {
 
 baseURL = 'https://tv.yahoo.co.jp/api/adapter'
 
+def XMLQuote(input:str):
+    input = input.replace('&', '&amp;')
+    input = input.replace('\'', '&apos;')
+    input = input.replace('"', '&quot;')
+    input = input.replace('<', '&lt;')
+    input = input.replace('>', '&gt;')
+    return input
+
 ###
 
 listings = dict()
@@ -144,9 +151,9 @@ programs = list()
 for item in listings.keys():
     for listing in listings[item]['listings']:
         programme = f'    <programme start="{datetime.fromtimestamp(listing["broadCastStartDate"]).strftime("%Y%m%d%H%M%S")}" channel="{item}">\n'
-        programme += f'        <title lang="ja">{quote(listing["programTitle"])}</title>\n'
-        programme += f'        <sub-title lang="ja">{quote(listing["title"])}</sub-title>\n'
-        programme += f'        <desc lang="ja">{quote(listing["summary"])}</desc>\n'
+        programme += f'        <title lang="ja">{XMLQuote(listing["programTitle"])}</title>\n'
+        programme += f'        <sub-title lang="ja">{XMLQuote(listing["title"])}</sub-title>\n'
+        programme += f'        <desc lang="ja">{XMLQuote(listing["summary"])}</desc>\n'
         # TODO: credits
         if not 'updateTime' in listing.keys():
             listing.update({'updateTime': datetime.fromtimestamp(listing['broadCastStartDate']).strftime('%Y-%m-%dT%H:%M:%SZ')})
