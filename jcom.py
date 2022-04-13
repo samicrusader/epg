@@ -39,7 +39,7 @@ channels = dict()
 req = requests.get(f'https://tvguide.myjcom.jp/api/mypage/getEpgChannelList/?channelType=120&area=108&channelGenre=&course=&chart=&is_adult=true')
 for channel in req.json()['header']:
     code = '120_'+channel['service_code']
-    xml += f'    <channel id="{code}.myjcom.jp">\n'
+    xml += f'    <channel id="{code.replace("_", ".")}.myjcom.jp">\n'
     xml += f'        <display-name lang="jp">{channel["channel_name"]}</display-name>\n'
     xml += '    </channel>\n'
     channels.update({code: channel['channel_name']})
@@ -58,7 +58,7 @@ for i in range(7):
     req = requests.get(f'https://tvguide.myjcom.jp/api/getEpgInfo/?channels={"%2C".join(epgchannels)}&rectime=&rec4k=').json()
     for c, epgitems in req.items():
         for epgitem in epgitems:
-            programme = f'    <programme start="{epgitem["programStart"]}" end="{epgitem["programEnd"]}" channel="120_{epgitem["serviceCode"]}.myjcom.jp">\n'
+            programme = f'    <programme start="{epgitem["programStart"]}" end="{epgitem["programEnd"]}" channel="120.{epgitem["serviceCode"].replace("_", ".")}.myjcom.jp">\n'
             programme += f'        <title lang="ja">{quote(epgitem["title"])}</title>\n'
             #programme += f'        <sub-title lang="ja">{}</sub-title>\n'
             programme += f'        <desc lang="ja">{quote(epgitem["commentary"])}</desc>\n'
