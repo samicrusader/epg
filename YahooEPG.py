@@ -108,8 +108,8 @@ xml += '<!DOCTYPE tv SYSTEM "https://github.com/XMLTV/xmltv/raw/master/xmltv.dtd
 xml += '<tv source-info-url="https://tv.yahoo.co.jp" source-info-name="Yahoo!テレビ - Gガイド" source-data-url="https://tv.yahoo.co.jp/listings" generator-info-name="samicrusader\'s EPG Parsers" generator-info-url="https://github.com/samicrusader/epg">\n'
 
 for i in range(7):
-    for servicemapping in serviceMappingsEN.keys():
-        for areaid in areaMappingsEN.keys():
+    for servicemapping in serviceMappings.keys():
+        for areaid in areaMappings.keys():
             dt = datetime.now()
             dt = int(datetime(dt.year, dt.month, dt.day+i, 15, 0, 0, tzinfo=timezone.utc).timestamp())
             x = requests.get(baseURL, params={'siTypeId': servicemapping, 'areaId': areaid, 'hours': 24, 'broadCastStartDate': dt, '_api': 'programListingQuery'})
@@ -118,7 +118,7 @@ for i in range(7):
                 for item in x.json()['ResultSet']['Result']:
                     sn = item['networkId']+'.'+item['serviceId']+'.tv.yahoo.co.jp'
                     if sn not in listings.keys():
-                        print(f'Added from {areaMappingsEN[areaid]}: {item["serviceName"]}')
+                        print(f'Added from {areaMappings[areaid]}: {item["serviceName"]}')
                         listings.update({
                             sn: {
                                 'serviceName': item['serviceName'],
