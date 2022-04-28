@@ -47,13 +47,13 @@ areaMappings = {
     #20: 'Iwate',
     #21: 'Fukushima',
     #22: 'Aomori',
-    23: 'Tokyo', #z
+    23: 'Tokyo',
     #24: 'Kanagawa',
     #25: 'Gunma',
     #26: 'Ibaraki',
     #27: 'Chiba',
     #28: 'Tochigi',
-    #29: 'Saitama', #z
+    #29: 'Saitama',
     #30: 'Nagano',
     #31: 'Niigata',
     #32: 'Yamanashi',
@@ -62,9 +62,9 @@ areaMappings = {
     #35: 'Shizuoka',
     #36: 'Fukui',
     #37: 'Toyama',
-    #38: 'Triple (?)', # "三重" What?
+    #38: 'Mie',
     #39: 'Gifu',
-    40: 'Osaka', #z
+    40: 'Osaka',
     #41: 'Kyoto',
     42: 'Hyogo',
     #43: 'Wakayama',
