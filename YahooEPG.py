@@ -176,6 +176,7 @@ for item in listings.keys():
         programme += '    </programme>\n'
         if not programme in programs:
             programs.append(programme)
+        epnum = None
 xml += ''.join(programs)
 xml += '</tv>'
 
